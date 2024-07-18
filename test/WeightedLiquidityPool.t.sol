@@ -67,26 +67,36 @@ contract CustomLiquidityPoolTest is Test {
         vm.stopPrank();
     }
 
-    function testCreateMaxTokenPool() public {
-        address[] memory tokens = new address[](8); // Use 8 instead of MAX_TOKENS_PER_POOL
-        uint256[] memory weights = new uint256[](8);
+    function testCreatePool() public {
+        address[] memory tokens = new address[](2);
+        tokens[0] = address(token1);
+        tokens[1] = address(token2);
 
-        for (uint256 i = 0; i < 8; i++) {
-            tokens[i] = address(
-                new MockERC20(
-                    string(abi.encodePacked("Token", i)),
-                    string(abi.encodePacked("TK", i))
-                )
-            );
-            weights[i] = 1e18 / 8;
-        }
+        uint256[] memory weights = new uint256[](2);
+        weights[0] = 5e17; // 50%
+        weights[1] = 5e17; // 50%
 
-        pool.createPool(tokens, weights, 100, 3e15);
+        uint256 allocPoint = 100;
+        uint256 swapFee = 3e15; // 0.3%
 
-        (address[] memory poolTokens, uint256[] memory poolWeights) = pool
-            .getPoolTokensandWeight(0);
-        assertEq(poolTokens.length, 8);
-        assertEq(poolWeights.length, 8);
+        pool.createPool(tokens, weights, allocPoint, swapFee);
+
+        // Get tokens
+        address[] memory poolTokens = pool.getPoolTokens(0);
+        assertEq(poolTokens.length, 2);
+        assertEq(poolTokens[0], address(token1));
+        assertEq(poolTokens[1], address(token2));
+
+        // Get tokens and weights
+        (
+            address[] memory tokensWithWeights,
+            uint256[] memory poolWeights
+        ) = pool.getPoolTokensandWeight(0);
+        assertEq(tokensWithWeights.length, 2);
+        assertEq(tokensWithWeights[0], address(token1));
+        assertEq(tokensWithWeights[1], address(token2));
+        assertEq(poolWeights[0], 5e17);
+        assertEq(poolWeights[1], 5e17);
     }
 
     function testFailCreatePoolInvalidWeights() public {
@@ -339,7 +349,7 @@ contract CustomLiquidityPoolTest is Test {
 
         pool.createPool(tokens, weights, 100, 3e15);
 
-        (address[] memory poolTokens, ) = pool.getPoolTokens(0);
+        (address[] memory poolTokens, ) = pool.getPoolTokensandWeight(0);
         assertEq(poolTokens.length, MAX_TOKENS_PER_POOL);
     }
 
