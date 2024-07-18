@@ -186,6 +186,9 @@ contract CustomLiquidityPoolTest is Test {
     function testClaimRewards() public {
         testAddLiquidity();
 
+        // Mint BAL tokens to the pool contract
+        balToken.mint(address(pool), 1000000 * 1e18);
+
         // Simulate some blocks passing
         vm.roll(block.number + 100);
 
