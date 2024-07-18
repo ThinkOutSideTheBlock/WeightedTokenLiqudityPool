@@ -207,14 +207,21 @@ contract CustomLiquidityPoolTest is Test {
 
         uint256 initialToken1Balance = token1.balanceOf(user1);
         uint256 initialToken2Balance = token2.balanceOf(user1);
+        uint256 initialLiquidity = pool.getUserLiquidity(0, user1);
 
         vm.startPrank(user1);
         pool.emergencyWithdraw(0);
         vm.stopPrank();
 
         assertEq(pool.getUserLiquidity(0, user1), 0);
-        assertGt(token1.balanceOf(user1), initialToken1Balance);
-        assertGt(token2.balanceOf(user1), initialToken2Balance);
+        assertEq(
+            token1.balanceOf(user1),
+            initialToken1Balance + initialLiquidity
+        );
+        assertEq(
+            token2.balanceOf(user1),
+            initialToken2Balance + initialLiquidity
+        );
         assertEq(pool.getPoolBalance(0, address(token1)), 0);
         assertEq(pool.getPoolBalance(0, address(token2)), 0);
     }
