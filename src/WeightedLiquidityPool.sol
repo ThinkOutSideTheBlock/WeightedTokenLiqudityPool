@@ -370,11 +370,17 @@ contract WeightedLiquidityPool is ReentrancyGuard, Ownable, Pausable {
     ) external view returns (address[] memory) {
         return pools[_poolId].tokens;
     }
-    function getPoolTokensandWeight(uint256 _poolId) external view returns (address[] memory tokens, uint256[] memory weights) {
-    Pool storage pool = pools[_poolId];
-    return (pool.tokens, pool.weights);
-}
 
+    function getPoolTokensandWeight(
+        uint256 _poolId
+    )
+        external
+        view
+        returns (address[] memory tokens, uint256[] memory weights)
+    {
+        Pool storage pool = pools[_poolId];
+        return (pool.tokens, pool.weights);
+    }
 
     function getPoolWeights(
         uint256 _poolId
@@ -415,8 +421,14 @@ contract WeightedLiquidityPool is ReentrancyGuard, Ownable, Pausable {
         pool.totalLiquidity -= liquidity;
 
         for (uint256 i = 0; i < pool.tokens.length; i++) {
-            uint256 amount = (liquidity * pool.balances[pool.tokens[i]]) /
-                pool.totalLiquidity;
+            uint256 amount;
+            if (pool.totalLiquidity == 0) {
+                amount = pool.balances[pool.tokens[i]];
+            } else {
+                amount =
+                    (liquidity * pool.balances[pool.tokens[i]]) /
+                    pool.totalLiquidity;
+            }
             pool.balances[pool.tokens[i]] -= amount;
             IERC20(pool.tokens[i]).safeTransfer(msg.sender, amount);
         }

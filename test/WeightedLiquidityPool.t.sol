@@ -232,7 +232,11 @@ contract CustomLiquidityPoolTest is Test {
         assertTrue(pool.paused());
 
         vm.expectRevert("Pausable: paused");
-        testAddLiquidity();
+        vm.prank(user1);
+        uint256[] memory amounts = new uint256[](2);
+        amounts[0] = 1000 * 1e18;
+        amounts[1] = 1000 * 1e18;
+        pool.addLiquidity(0, amounts);
 
         pool.unpause();
         assertFalse(pool.paused());
