@@ -160,20 +160,28 @@ contract WeightedLiquidityPool is ReentrancyGuard, Ownable, Pausable {
         uint256 fee = 0;
         if (block.timestamp < user.lastDepositTime + WITHDRAWAL_FEE_PERIOD) {
             fee = (_liquidity * WITHDRAWAL_FEE) / FEE_DENOMINATOR;
-            _liquidity -= fee;
         }
+        uint256 liquidityAfterFee = _liquidity - fee;
 
-        user.liquidity -= _liquidity + fee;
-        pool.totalLiquidity -= _liquidity + fee;
-
+        // Calculate amounts before updating liquidity
+        uint256[] memory amounts = new uint256[](pool.tokens.length);
         for (uint256 i = 0; i < pool.tokens.length; i++) {
-            uint256 amount = (_liquidity * pool.balances[pool.tokens[i]]) /
+            amounts[i] =
+                (_liquidity * pool.balances[pool.tokens[i]]) /
                 pool.totalLiquidity;
-            pool.balances[pool.tokens[i]] -= amount;
-            IERC20(pool.tokens[i]).safeTransfer(msg.sender, amount);
         }
 
-        emit LiquidityRemoved(_poolId, msg.sender, _liquidity, fee);
+        // Update liquidity
+        user.liquidity -= _liquidity;
+        pool.totalLiquidity -= _liquidity;
+
+        // Transfer tokens
+        for (uint256 i = 0; i < pool.tokens.length; i++) {
+            pool.balances[pool.tokens[i]] -= amounts[i];
+            IERC20(pool.tokens[i]).safeTransfer(msg.sender, amounts[i]);
+        }
+
+        emit LiquidityRemoved(_poolId, msg.sender, liquidityAfterFee, fee);
     }
 
     function swap(
@@ -408,6 +416,12 @@ contract WeightedLiquidityPool is ReentrancyGuard, Ownable, Pausable {
 
     function unpause() external onlyOwner {
         _unpause();
+    }
+
+    function getTotalLiquidity(
+        uint256 _poolId
+    ) external view returns (uint256) {
+        return pools[_poolId].totalLiquidity;
     }
 
     function emergencyWithdraw(uint256 _poolId) external nonReentrant {

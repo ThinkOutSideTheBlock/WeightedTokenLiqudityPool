@@ -148,18 +148,63 @@ contract CustomLiquidityPoolTest is Test {
         testAddLiquidity();
 
         uint256 initialLiquidity = pool.getUserLiquidity(0, user1);
+        uint256 initialTotalLiquidity = pool.getTotalLiquidity(0);
+        uint256 initialToken1Balance = pool.getPoolBalance(0, address(token1));
+        uint256 initialToken2Balance = pool.getPoolBalance(0, address(token2));
         uint256 removeAmount = 500 * 1e18;
+
+        console.log("Initial user liquidity:", initialLiquidity);
+        console.log("Initial total liquidity:", initialTotalLiquidity);
+        console.log("Initial token1 balance:", initialToken1Balance);
+        console.log("Initial token2 balance:", initialToken2Balance);
+        console.log("Remove amount:", removeAmount);
 
         vm.startPrank(user1);
         pool.removeLiquidity(0, removeAmount);
         vm.stopPrank();
 
+        uint256 finalLiquidity = pool.getUserLiquidity(0, user1);
+        uint256 finalTotalLiquidity = pool.getTotalLiquidity(0);
+        uint256 finalToken1Balance = pool.getPoolBalance(0, address(token1));
+        uint256 finalToken2Balance = pool.getPoolBalance(0, address(token2));
+
+        console.log("Final user liquidity:", finalLiquidity);
+        console.log("Final total liquidity:", finalTotalLiquidity);
+        console.log("Final token1 balance:", finalToken1Balance);
+        console.log("Final token2 balance:", finalToken2Balance);
+
         assertEq(
-            pool.getUserLiquidity(0, user1),
-            initialLiquidity - removeAmount
+            finalLiquidity,
+            initialLiquidity - removeAmount,
+            "Incorrect final user liquidity"
         );
-        assertEq(pool.getPoolBalance(0, address(token1)), 500 * 1e18);
-        assertEq(pool.getPoolBalance(0, address(token2)), 500 * 1e18);
+        assertEq(
+            finalTotalLiquidity,
+            initialTotalLiquidity - removeAmount,
+            "Incorrect final total liquidity"
+        );
+        assertEq(
+            finalToken1Balance,
+            initialToken1Balance - removeAmount,
+            "Incorrect token1 balance"
+        );
+        assertEq(
+            finalToken2Balance,
+            initialToken2Balance - removeAmount,
+            "Incorrect token2 balance"
+        );
+
+        // Additional assertions
+        assertEq(
+            token1.balanceOf(user1),
+            9500 * 1e18,
+            "Incorrect user token1 balance"
+        );
+        assertEq(
+            token2.balanceOf(user1),
+            9500 * 1e18,
+            "Incorrect user token2 balance"
+        );
     }
 
     function testFailRemoveLiquidityTooMuch() public {
