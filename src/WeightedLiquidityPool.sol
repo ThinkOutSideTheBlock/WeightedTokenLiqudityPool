@@ -370,6 +370,11 @@ contract WeightedLiquidityPool is ReentrancyGuard, Ownable, Pausable {
     ) external view returns (address[] memory) {
         return pools[_poolId].tokens;
     }
+    function getPoolTokensandWeight(uint256 _poolId) external view returns (address[] memory tokens, uint256[] memory weights) {
+    Pool storage pool = pools[_poolId];
+    return (pool.tokens, pool.weights);
+}
+
 
     function getPoolWeights(
         uint256 _poolId
