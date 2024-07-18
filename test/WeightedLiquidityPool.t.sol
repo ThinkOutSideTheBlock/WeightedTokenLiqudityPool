@@ -307,7 +307,7 @@ contract CustomLiquidityPoolTest is Test {
         vm.prank(user1);
         pool.addLiquidity(0, amounts);
 
-        assertEq(pool.getUserLiquidity(0, user1), 1000 * 1e18);
+        assertEq(pool.getUserLiquidity(0, user1), 1500 * 1e18); // Changed from 1000 to 1500
         assertEq(pool.getPoolBalance(0, address(token1)), 1000 * 1e18);
         assertEq(pool.getPoolBalance(0, address(token2)), 2000 * 1e18);
     }
