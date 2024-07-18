@@ -179,7 +179,8 @@ contract CustomLiquidityPoolTest is Test {
         testAddLiquidity();
 
         vm.startPrank(user2);
-        pool.swap(0, address(token1), address(token2), 100 * 1e18, 100 * 1e18); // Expecting too much output
+        vm.expectRevert("Insufficient output amount");
+        pool.swap(0, address(token1), address(token2), 100 * 1e18, 99 * 1e18); // Expecting almost 1:1 ratio, which should fail
         vm.stopPrank();
     }
 
