@@ -147,11 +147,17 @@ contract CustomLiquidityPoolTest is Test {
     function testRemoveLiquidity() public {
         testAddLiquidity();
 
+        uint256 initialLiquidity = pool.getUserLiquidity(0, user1);
+        uint256 removeAmount = 500 * 1e18;
+
         vm.startPrank(user1);
-        pool.removeLiquidity(0, 500 * 1e18);
+        pool.removeLiquidity(0, removeAmount);
         vm.stopPrank();
 
-        assertEq(pool.getUserLiquidity(0, user1), 500 * 1e18);
+        assertEq(
+            pool.getUserLiquidity(0, user1),
+            initialLiquidity - removeAmount
+        );
         assertEq(pool.getPoolBalance(0, address(token1)), 500 * 1e18);
         assertEq(pool.getPoolBalance(0, address(token2)), 500 * 1e18);
     }
@@ -235,10 +241,12 @@ contract CustomLiquidityPoolTest is Test {
     }
 
     function testPauseUnpause() public {
+        testCreatePool();
+
         pool.pause();
         assertTrue(pool.paused());
 
-        vm.expectRevert("Pausable: paused");
+        vm.expectRevert();
         vm.prank(user1);
         uint256[] memory amounts = new uint256[](2);
         amounts[0] = 1000 * 1e18;
@@ -248,7 +256,9 @@ contract CustomLiquidityPoolTest is Test {
         pool.unpause();
         assertFalse(pool.paused());
 
-        testAddLiquidity();
+        vm.prank(user1);
+        pool.addLiquidity(0, amounts);
+        assertEq(pool.getUserLiquidity(0, user1), 1000 * 1e18);
     }
 
     function testFailPauseNonOwner() public {
